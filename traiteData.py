@@ -64,6 +64,7 @@ elif choix == 1:
             print(line)
 elif choix == 3:
     dataForSql = list()
+    liste_date = []
     # print("\t\t\t Ci_dessous les données aprés calcul des moyennes\n")
     with open("valide_data.csv", "r") as d:
         valide = csv.reader(d)
@@ -98,7 +99,16 @@ elif choix == 3:
             line = {"numero":line[0],"nom":line[1],"prenom":line[2],"date":line[3],"classe":line[4],"note":line[5]}
             dataForSql.append(line)
             # print(line[5].keys())
-    # print(dataForSql)
+   # print(dataForSql)
+    ff=[]
+    dateSqlFormat=[]
+    for dat in range(len(dataForSql)):
+       liste_date.append(dataForSql[dat]['date'])
+    for k in range(len(liste_date)):
+       ff.append(liste_date[k].split('-'))
+       ff[k].reverse()
+       dateSqlFormat.append("-".join(ff[k]))
+    # print(dateSqlFormat)
         # print(line[5]['Math'][0])
         # for line in line[5].items():
         #     print(line)

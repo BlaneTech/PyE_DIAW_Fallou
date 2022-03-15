@@ -2,6 +2,7 @@ import mysql.connector
 from mysql.connector import Error 
 import traiteData
 dico = traiteData.dataForSql
+list_date = traiteData.dateSqlFormat
 config = {
         'host': '127.0.0.1',
         'database':'PYTHON01',
@@ -25,6 +26,12 @@ suivre = "INSERT INTO SUIVRE (numero_ETUDIANT, nom_MATIERE,noteExamen_CONCERNER)
 
 # insertion dans matiere
 for key in dico[1]['note'].keys():
+    if key in ["francais", "Francais"]:
+        key = "FRANÇAIS"
+    elif key == "anglais":
+        key = "ANGLAIS"
+    elif key == "Math":
+        key = "MATH"
     curseur.execute(matiere,(key,))
 
 #insertion dans la table  classe
@@ -35,7 +42,7 @@ for name in range(len(list_nomClassse)):
     curseur.execute(classe,(list_nomClassse[name],))
 # insertion dans etudiant
 for i in range(1,len(dico)):
-    curseur.execute(etudiant, (dico[i]['numero'],dico[i]['nom'],dico[i]['prenom'],dico[i]['date'],dico[i]['classe']))
+    curseur.execute(etudiant, (dico[i]['numero'],dico[i]['nom'],dico[i]['prenom'],list_date[i],dico[i]['classe']))
     
     # insertion  dans la table devoir
     for key in dico[i]['note'].keys():
@@ -52,7 +59,7 @@ for i in range(1,len(dico)):
         for k in range(len(dico[i]['note'][key1]['devoir'])):
             curseur.execute(faire,(dico[i]['numero'],list_id_devoir[num_id][0]))
             num_id+=1
-    
+#insertion dans suivre
 for i in range(1,len(dico)):
     for key2 in dico[i]['note'].keys():
         curseur.execute(suivre,(dico[i]['numero'],key2,dico[i]['note'][key2]['examen']))
