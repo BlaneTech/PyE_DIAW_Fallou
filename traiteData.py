@@ -90,11 +90,7 @@ elif choix == 3:
                 # print(plain_list_dict[key][0])
                 noteg ={"devoir":plain_list_dict[key][0], "examen":plain_list_dict[key][1]}
                 plain_list_dict[key] = noteg
-                # moyD = sum(plain_list_dict[key][0]) / len(plain_list_dict[key][0])
-                # moyM = ((moyD + 2 * plain_list_dict[key][1]) / 3).__round__(2)
-                # plain_list_dict[key] = moyM
-            # moyen = {"Moy_G": (sum(plain_list_dict.values()) / 6).__round__(2)}
-            # plain_list_dict.update(moyen)
+        
             line[5] = plain_list_dict
             line = {"numero":line[0],"nom":line[1],"prenom":line[2],"date":line[3],"classe":line[4],"note":line[5]}
             dataForSql.append(line)
@@ -102,16 +98,15 @@ elif choix == 3:
    # print(dataForSql)
     ff=[]
     dateSqlFormat=[]
+    listDictNote=[]
+    noteForSql = []
     for dat in range(len(dataForSql)):
-       liste_date.append(dataForSql[dat]['date'])
+        listDictNote.append(dataForSql[dat]['note'])
+        liste_date.append(dataForSql[dat]['date'])
     for k in range(len(liste_date)):
-       ff.append(liste_date[k].split('-'))
-       ff[k].reverse()
-       dateSqlFormat.append("-".join(ff[k]))
-    # print(dateSqlFormat)
-        # print(line[5]['Math'][0])
-        # for line in line[5].items():
-        #     print(line)
+        ff.append(liste_date[k].split('-'))
+        ff[k].reverse()
+        dateSqlFormat.append("-".join(ff[k]))
 else:
     print("Oups! entré invalide")
        # listeValide.append(line)

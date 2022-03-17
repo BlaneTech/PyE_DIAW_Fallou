@@ -1,13 +1,18 @@
+from http.client import ImproperConnectionState
 import mysql.connector
 from mysql.connector import Error 
+from statistics import mean
 import traiteData
+
 dico = traiteData.dataForSql
 list_date = traiteData.dateSqlFormat
+
+# -----------connexion à la base de donnée----------------
 config = {
         'host': '127.0.0.1',
         'database':'PYTHON01',
         'user':'root',
-        'password':'6wdGPPpOe!'
+        'password':'PASSWORD'
     }
 try:    
     dbConnect = mysql.connector.connect(**config)
@@ -17,53 +22,61 @@ except Error:
 curseur = dbConnect.cursor()
 list_id_devoir= list()
 list_nomClassse = list()
-etudiant = "INSERT INTO ETUDIANT (numero_ETUDIANT, nom_ETUDIANT, prenom_ETUDIANT, dateNais_ETUDIANT,nom_CLASSE) VALUES (%s,%s,%s,%s,%s)"
-devoir = "INSERT INTO DEVOIR(numero_DEVOIR, note_DEVOIR,nom_MATIERE) VALUES (%s,%s,%s)"
+listMatiere=[]
+
+etudiant = "INSERT INTO ETUDIANT (numero_ETUDIANT, nom_ETUDIANT, prenom_ETUDIANT, dateNais_ETUDIANT,id_CLASSE) VALUES (%s,%s,%s,%s,%s)"
+note = "INSERT INTO NOTE(valeur, type,id_ETUDIANT,id_MATIERE) VALUES (%s,%s,%s,%s)"
 classe = "INSERT INTO CLASSE (nom_CLASSE) VALUES (%s)"
 matiere = "INSERT INTO MATIERE (nom_MATIERE) VALUES (%s)"
-faire = "INSERT INTO FAIRE (numero_ETUDIANT, id_DEVOIR) VALUES (%s,%s)"
-suivre = "INSERT INTO SUIVRE (numero_ETUDIANT, nom_MATIERE,noteExamen_CONCERNER) VALUES (%s,%s,%s)"
+moyenne = "INSERT INTO MOYENNE (valeur_MOYENNE, id_ETUDIANT) VALUES (%s,%s)"
 
-# insertion dans matiere
+# ----------------------insertion dans matiere----------------------
 for key in dico[1]['note'].keys():
-    if key in ["francais", "Francais"]:
-        key = "FRANÇAIS"
-    elif key == "anglais":
-        key = "ANGLAIS"
-    elif key == "Math":
-        key = "MATH"
+    if key not in listMatiere:
+        listMatiere.append(key)
     curseur.execute(matiere,(key,))
+# print(listMatiere)
 
-#insertion dans la table  classe
+#--------------------insertion dans la table  classe-------------------------
 for i in range(1,len(dico)):
     if dico[i]['classe'] not in list_nomClassse:
             list_nomClassse.append(dico[i]['classe'])
 for name in range(len(list_nomClassse)):
     curseur.execute(classe,(list_nomClassse[name],))
-# insertion dans etudiant
-for i in range(1,len(dico)):
-    curseur.execute(etudiant, (dico[i]['numero'],dico[i]['nom'],dico[i]['prenom'],list_date[i],dico[i]['classe']))
-    
-    # insertion  dans la table devoir
-    for key in dico[i]['note'].keys():
-        for j in range(len(dico[i]['note'][key]['devoir'])):
-            curseur.execute(devoir,(j+1,dico[i]['note'][key]['devoir'][j],key))
 
-#insertion dans la table faire
-curseur.execute("SELECT id_DEVOIR FROM DEVOIR")
-for idDevoir in curseur.fetchall():
-    list_id_devoir.append(idDevoir)
-num_id = 0
+ # insertion dans etudiant
 for i in range(1,len(dico)):
-    for key1 in dico[i]['note'].keys():
-        for k in range(len(dico[i]['note'][key1]['devoir'])):
-            curseur.execute(faire,(dico[i]['numero'],list_id_devoir[num_id][0]))
-            num_id+=1
-#insertion dans suivre
+    if dico[i]['classe'] in list_nomClassse:
+        idClasse = list_nomClassse.index(dico[i]['classe'])+1
+    curseur.execute(etudiant, (dico[i]['numero'],dico[i]['nom'],dico[i]['prenom'],list_date[i],idClasse))
+    
+# -------------------insertion  dans la table devoir----------------------
+ww=0
+sumMoy=0
+typeNote = ["DEVOIR","EXAMEN"]
 for i in range(1,len(dico)):
-    for key2 in dico[i]['note'].keys():
-        curseur.execute(suivre,(dico[i]['numero'],key2,dico[i]['note'][key2]['examen']))
-        # num_idm += len(dico[i]['note'][key2]['devoir'])
+    for key in dico[i]['note'].keys():
+        if key in ["Francais","francais","Français","français"]:
+            idMatiere = listMatiere.index("Francais")
+        elif  key in ["Anglais","ANGLAIS"]:
+            idMatiere = listMatiere.index("Anglais")
+        elif key in ["Math","math"]:
+            idMatiere = listMatiere.index("Math")
+        else:
+            idMatiere = listMatiere.index(key)
+        for j in range(len(dico[i]['note'][key]['devoir'])):
+            curseur.execute(note,(dico[i]['note'][key]['devoir'][j],typeNote[0],i,idMatiere+1))
+            ww+=1
+            if ww == len(dico[i]['note'][key]['devoir']):
+                curseur.execute(note,(dico[i]['note'][key]['examen'],typeNote[1],i,idMatiere+1))
+                # pass
+        ww=0
+#------------------- calcul et insertion dans moyenne------------------------------
+        moyPartiel = (mean(dico[i]['note'][key]['devoir']) + 2*dico[i]['note'][key]['examen'])/3
+        sumMoy+=moyPartiel
+    moyGen = (sumMoy/6).__round__(2)
+    sumMoy=0
+    curseur.execute(moyenne,(moyGen,i))
 
 dbConnect.commit()
 dbConnect.close()
